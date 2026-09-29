@@ -10,26 +10,6 @@ This combines:
      theta4 is independent of psi and checked separately), covering BOTH
      joint limits (eq. 32) and singularity avoidance (eq. 31).
 
-KEY VERIFIED FACTS (see development history):
-  - Every entry of R_0_3(psi), R_0_4(psi), and R_4_7(psi) is EXACTLY linear
-    in sin(psi)/cos(psi) -- confirmed via direct symbolic expansion.
-  - IMPORTANT: this linearity holds for the MATRICES built by multiplying
-    R_0_3(psi) by FIXED matrices. It does NOT hold if you decompose R_0_3
-    into individual scalar angles (theta1,theta2,theta3 via atan2/division)
-    and then try to recompose a matrix from those scalars -- division and
-    sqrt break linearity. Always stay in matrix form until the final
-    scalar-angle extraction step.
-  - The Weierstrass-substitution quadratic for solving a*sin(psi)+b*cos(psi)
-    +c=0 is (c-b)*t^2 + 2*a*t + (b+c) = 0, NOT a naive a*t^2+b*t+c=0 (a real
-    bug caught and fixed during development via cross-checking against
-    independent numerical bisection).
-
-Collision avoidance is NOT handled analytically anywhere in this pipeline
-(no closed-form method exists in the literature for arbitrary-environment
-collision avoidance) -- sample within the final feasible psi range(s)
-returned here and run your existing collision checker, exactly as in the
-earlier findElbowAngleForGoal design.
-
 The output solutions need not match any particular manually-input joint
 angles, since there are infinitely many valid solutions (one per feasible
 psi). This script instead picks a psi that is provably within joint limits
@@ -358,6 +338,7 @@ if __name__ == "__main__":
 
     R03_v_1, R03_v_2 = calc_ref_plane_mat(p26, l2v, l3v, theta4_expr, theta4_2_expr, l1v, l2v)
     R03_v_1 = R03_v_1.evalf()
+    R03_v_2 = R03_v_2.evalf()
 
     K = sp.Matrix([[0, -p26_u[2, 0], p26_u[1, 0]],
                    [p26_u[2, 0], 0, -p26_u[0, 0]],
@@ -366,8 +347,7 @@ if __name__ == "__main__":
 
     # R_0_3(psi), branch 1 -- psi kept SYMBOLIC/free
     R03_sym = sp.expand_trig(sp.expand(R_psi_sym * R03_v_1))
-
-    sp.pprint(R03_sym)
+    R03_sym_2 = sp.expand_trig(sp.expand(R_psi_sym * R03_v_2))
 
     # Extract theta1, theta2, theta3 coefficients
     a2, b2, c2 = linear_coeffs(-R03_sym[2, 1], psi)
